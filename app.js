@@ -5,12 +5,15 @@ const bodyparser =  require("body-parser");
 const ejs = require("ejs");
 const mongoose = require("mongoose");
 const encrypt = require("mongoose-encryption");
+const bcrypt = require("bcrypt");
+
+//////bcrypt//////////////////
+const saltRounds = 10; 
 
 const app = express();
 app.use(express.static("public"));
 app.set('view engine', 'ejs');
 app.use(bodyparser.urlencoded({extended:true}));
-
 
 
 
@@ -42,20 +45,25 @@ app.get("/register",(req,res)=>{
 /////////////////////////post pages////////////////////////////////////////
 
 app.post("/register",(req,res)=>{
-    let user = req.body.username; 
-    let password = req.body.password;
-    const newUser= new User({
-        email:user , 
-        password:password
+    ///hash + saltRounds////
+    bcrypt.hash(req.body.password,saltRounds,(err,hash)=>{
+        let user = req.body.username; 
+        let password = hash;
+        const newUser= new User({
+            email:user , 
+            password:password
+        });
+        newUser.save((err)=>{
+            if (err){
+                console.log(err);
+            }
+            else{
+                res.render("secrets");
+            }
+        })
+
     });
-    newUser.save((err)=>{
-        if (err){
-            console.log(err);
-        }
-        else{
-            res.render("secrets");
-        }
-    })
+    
 });
 
 app.post("/login", (req,res)=>{
